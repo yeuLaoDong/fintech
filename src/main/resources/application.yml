@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: user-service
+
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=fintech;encrypt=true;trustServerCertificate=true
+    username: sa
+    password: sa
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
