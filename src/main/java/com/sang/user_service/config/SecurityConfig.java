@@ -63,7 +63,8 @@ public class SecurityConfig {
                     "/api/auth/**",         // login, register, refresh
                     "/api/public/**",       // any public endpoints
                     "/v3/api-docs/**",      // Swagger (future)
-                    "/swagger-ui/**"        // Swagger UI (future)
+                    "/swagger-ui/**",       // Swagger UI (future)
+                    "/error"                // Spring Boot error endpoint
                 ).permitAll()
 
                 // Admin-only endpoints

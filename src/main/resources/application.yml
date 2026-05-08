@@ -19,6 +19,18 @@ spring:
     baseline-on-migrate: true
     baseline-version: 0
 
+  # Kafka Producer
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    # Topic names
+    template:
+      default-topic: user-events
+
 # JWT Configuration
 jwt:
   secret: YourSuperSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong!!ChangeThisInProduction2026

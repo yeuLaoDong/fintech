@@ -7,6 +7,8 @@ import com.sang.user_service.dto.response.TwoFactorSetupResponse;
 import com.sang.user_service.entity.Role;
 import com.sang.user_service.entity.User;
 import com.sang.user_service.entity.UserStatus;
+import com.sang.user_service.event.UserEvent;
+import com.sang.user_service.event.UserEventProducer;
 import com.sang.user_service.repository.RoleRepository;
 import com.sang.user_service.repository.UserRepository;
 import com.sang.user_service.security.JwtUtils;
@@ -26,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -68,6 +71,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final TotpService totpService;
+    private final UserEventProducer eventProducer;
 
     /**
      * Register a new user.
@@ -100,6 +104,16 @@ public class AuthService {
 
         userRepository.save(user);
         logger.info("New user registered: {}", user.getEmail());
+
+        // Publish USER_REGISTERED event → notification-service sends welcome email
+        eventProducer.publishEvent(UserEvent.builder()
+                .eventType("USER_REGISTERED")
+                .userId(user.getId())
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .timestamp(Instant.now())
+                .metadata(Map.of("firstName", user.getFirstName() != null ? user.getFirstName() : ""))
+                .build());
 
         // Auto-login after registration
         UserDetailsImpl userDetails = UserDetailsImpl.build(user);
@@ -165,6 +179,16 @@ public class AuthService {
         user.setLastLoginAt(Instant.now());
         user.setLastLoginIp(getClientIp(httpRequest));
         userRepository.save(user);
+
+        // Publish USER_LOGIN event
+        eventProducer.publishEvent(UserEvent.builder()
+                .eventType("USER_LOGIN")
+                .userId(user.getId())
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .timestamp(Instant.now())
+                .metadata(Map.of("ip", getClientIp(httpRequest)))
+                .build());
 
         // Step 6: Generate tokens
         UserDetailsImpl userDetails = UserDetailsImpl.build(user);
@@ -294,6 +318,16 @@ public class AuthService {
         if (attempts >= MAX_FAILED_ATTEMPTS) {
             user.setLockedUntil(Instant.now().plus(LOCK_DURATION_MINUTES, ChronoUnit.MINUTES));
             logger.warn("Account locked for user: {} after {} failed attempts", user.getEmail(), attempts);
+
+            // Publish USER_LOCKED event → notification-service sends alert
+            eventProducer.publishEvent(UserEvent.builder()
+                    .eventType("USER_LOCKED")
+                    .userId(user.getId())
+                    .email(user.getEmail())
+                    .username(user.getUsername())
+                    .timestamp(Instant.now())
+                    .metadata(Map.of("failedAttempts", String.valueOf(attempts)))
+                    .build());
         }
 
         userRepository.save(user);

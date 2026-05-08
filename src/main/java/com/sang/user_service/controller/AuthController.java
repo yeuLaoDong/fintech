@@ -115,7 +115,7 @@ public class AuthController {
      * Requires: valid JWT
      */
     @GetMapping("/me")
-    public ResponseEntity<AuthResponse> getCurrentUser(
+    public ResponseEntity<AuthResponse> getCurrentUser( 
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return ResponseEntity.ok(AuthResponse.builder()
                 .email(userDetails.getEmail())
