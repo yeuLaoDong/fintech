@@ -10,11 +10,33 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     show-sql: true
     open-in-view: false
 
   flyway:
     enabled: true
     baseline-on-migrate: true
+    baseline-version: 0
 
+  # Kafka Producer
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    # Topic names
+    template:
+      default-topic: user-events
+
+# JWT Configuration
+jwt:
+  secret: YourSuperSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong!!ChangeThisInProduction2026
+  access-token-expiration: 900000      # 15 minutes in ms
+  refresh-token-expiration: 604800000  # 7 days in ms
+
+# 2FA Configuration
+totp:
+  issuer: FintechApp
